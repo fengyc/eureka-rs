@@ -13,6 +13,7 @@ pub struct Register<'a> {
 pub struct Instance {
     /// This doubles as the instance ID, because why not, Eureka?
     pub host_name: String,
+    pub instance_id: String,
     pub app: String,
     pub ip_addr: String,
     pub vip_address: String,
@@ -33,6 +34,7 @@ impl Default for Instance {
     fn default() -> Self {
         Instance {
             host_name: "localhost".to_string(),
+            instance_id: format!("{}:127.0.0.1", env::var("CARGO_PKG_NAME").unwrap_or_default()),
             app: env::var("CARGO_PKG_NAME").unwrap_or_default(),
             ip_addr: "127.0.0.1".to_string(),
             vip_address: env::var("CARGO_PKG_NAME").unwrap_or_default(),
