@@ -95,6 +95,7 @@ impl EurekaRestClient {
             Err(e) => Err(EurekaError::Network(e)),
             Ok(mut resp) => match resp.status() {
                 StatusCode::OK => {
+                    // println!("resp {:?}", resp.text().unwrap());
                     let apps: AllApplications = resp
                         .json()
                         .map_err(|e| EurekaError::ParseError(e.to_string()))?;
