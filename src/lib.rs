@@ -1,3 +1,5 @@
+#![allow(unused, deprecated)]
+
 extern crate itertools;
 #[macro_use]
 extern crate log;
@@ -16,7 +18,7 @@ use self::registry::RegistryClient;
 use reqwest::header::HeaderMap;
 use reqwest::Client as ReqwestClient;
 pub use reqwest::{Error as ReqwestError, Method, Response, StatusCode};
-use serde::Serialize;
+use serde::{Serialize, de::DeserializeOwned};
 
 mod aws;
 mod instance;
@@ -177,6 +179,20 @@ impl EurekaClient {
                 "Could not find app {}",
                 app
             )))
+        }
+    }
+    pub fn call<V: Serialize, R: DeserializeOwned>(
+        &self,
+        app: &str,
+        path: &str,
+        method: Method,
+        body: &V,
+        mut headers: HeaderMap,
+    ) -> Result<R, EurekaError> {
+        let mut resp = self.make_request(app, path, method, body, headers)?;
+        match resp.status() {
+            StatusCode::OK => Ok(resp.json().map_err(EurekaError::Network)?),
+            s => Err(EurekaError::Request(resp.status())),
         }
     }
 }
