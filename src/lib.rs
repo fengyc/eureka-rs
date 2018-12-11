@@ -149,6 +149,7 @@ impl EurekaClient {
         body: &V,
         mut headers: HeaderMap,
     ) -> Result<Response, EurekaError> {
+        println!("finding app {}", app);
         let instance = self.registry.get_instance_by_app_name(app);
         if let Some(instance) = instance {
             let ssl = self.config.eureka.ssl;
@@ -159,6 +160,7 @@ impl EurekaClient {
             } else {
                 instance.port.and_then(|port| port.value()).unwrap_or(8080)
             };
+            println!("app {} addr {}:{}", app, host, port);
             headers.insert("Accept", "application/json".parse().unwrap());
             self.client
                 .request(

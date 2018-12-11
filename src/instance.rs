@@ -22,6 +22,14 @@ impl InstanceClient {
         }
     }
 
+    fn get_instance_id(&self) -> String {
+        let mut instance_id = self.config.host_name.clone();
+        if let Some(ref inst_id) = self.config.instance_id {
+            instance_id = inst_id.clone();
+        } 
+        instance_id
+    }
+
     pub fn start(&self) {
         while let Err(e) = self.client.register(&self.config.app, &*self.config) {
             error!("Failed to register app: {}", e);
@@ -34,10 +42,11 @@ impl InstanceClient {
         let is_running = Arc::clone(&self.is_running);
         let client = Arc::clone(&self.client);
         let config = Arc::clone(&self.config);
+        let instance_id = self.get_instance_id();
         thread::spawn(move || {
             thread::sleep(Duration::from_secs(30));
             while is_running.load(Ordering::Relaxed) {
-                let resp = client.send_heartbeat(&config.app, &config.host_name);
+                let resp = client.send_heartbeat(&config.app, &instance_id);
                 match resp {
                     Err(EurekaError::UnexpectedState(_)) => {
                         warn!("App not registered with eureka, reregistering");
@@ -56,7 +65,7 @@ impl InstanceClient {
 
         while let Err(e) =
             self.client
-                .update_status(&self.config.app, &self.config.host_name, StatusType::Up)
+                .update_status(&self.config.app, &self.get_instance_id(), StatusType::Up)
         {
             error!("Failed to set app to UP: {}", e);
             thread::sleep(Duration::from_secs(15));
@@ -69,6 +78,6 @@ impl Drop for InstanceClient {
         self.is_running.store(false, Ordering::Relaxed);
         let _ = self
             .client
-            .deregister(&self.config.app, &self.config.host_name);
+            .deregister(&self.config.app, &self.get_instance_id());
     }
 }
