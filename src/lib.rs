@@ -18,7 +18,8 @@ use self::registry::RegistryClient;
 use reqwest::header::HeaderMap;
 use reqwest::Client as ReqwestClient;
 pub use reqwest::{Error as ReqwestError, Method, Response, StatusCode};
-use serde::{Serialize, de::DeserializeOwned};
+pub use serde::Serialize;
+pub use serde::de::DeserializeOwned;
 
 mod aws;
 mod instance;
@@ -152,6 +153,7 @@ impl EurekaClient {
         println!("finding app {}", app);
         let instance = self.registry.get_instance_by_app_name(app);
         if let Some(instance) = instance {
+            //println!("app {} instance {:?}", app, instance);
             let ssl = self.config.eureka.ssl;
             let protocol = if ssl { "https" } else { "http" };
             let host = instance.ip_addr;
@@ -172,15 +174,15 @@ impl EurekaClient {
                         port,
                         path.trim_left_matches('/')
                     ),
-                ).headers(headers)
+                )
+                .headers(headers)
                 .json(body)
                 .send()
                 .map_err(EurekaError::Network)
         } else {
-            Err(EurekaError::UnexpectedState(format!(
-                "Could not find app {}",
-                app
-            )))
+            Err(EurekaError::UnexpectedState(
+                format!("Could not find app {}", app),
+            ))
         }
     }
     pub fn call<V: Serialize, R: DeserializeOwned>(

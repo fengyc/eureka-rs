@@ -26,7 +26,7 @@ impl InstanceClient {
         let mut instance_id = self.config.host_name.clone();
         if let Some(ref inst_id) = self.config.instance_id {
             instance_id = inst_id.clone();
-        } 
+        }
         instance_id
     }
 
@@ -63,9 +63,11 @@ impl InstanceClient {
             }
         });
 
-        while let Err(e) =
-            self.client
-                .update_status(&self.config.app, &self.get_instance_id(), StatusType::Up)
+        while let Err(e) = self.client.update_status(
+            &self.config.app,
+            &self.get_instance_id(),
+            StatusType::Up,
+        )
         {
             error!("Failed to set app to UP: {}", e);
             thread::sleep(Duration::from_secs(15));
@@ -76,8 +78,9 @@ impl InstanceClient {
 impl Drop for InstanceClient {
     fn drop(&mut self) {
         self.is_running.store(false, Ordering::Relaxed);
-        let _ = self
-            .client
-            .deregister(&self.config.app, &self.get_instance_id());
+        let _ = self.client.deregister(
+            &self.config.app,
+            &self.get_instance_id(),
+        );
     }
 }

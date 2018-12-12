@@ -22,18 +22,19 @@ impl EurekaRestClient {
     pub fn register(&self, app_id: &str, data: &Instance) -> Result<(), EurekaError> {
         let url = format!("{}/apps/{}", self.base_url, path_segment_encode(app_id));
         debug!("Sending register request to {}", url);
-        let resp = self
-            .client
+        let resp = self.client
             .post(&url)
             .header("Accept", "application/json")
             .json(&Register { instance: data })
             .send();
         match resp {
             Err(e) => Err(EurekaError::Network(e)),
-            Ok(resp) => match resp.status() {
-                StatusCode::NO_CONTENT => Ok(()),
-                _ => Err(EurekaError::Request(resp.status())),
-            },
+            Ok(resp) => {
+                match resp.status() {
+                    StatusCode::NO_CONTENT => Ok(()),
+                    _ => Err(EurekaError::Request(resp.status())),
+                }
+            }
         }
     }
 
@@ -49,10 +50,12 @@ impl EurekaRestClient {
         let resp = self.client.delete(&url).send();
         match resp {
             Err(e) => Err(EurekaError::Network(e)),
-            Ok(resp) => match resp.status() {
-                StatusCode::OK => Ok(()),
-                _ => Err(EurekaError::Request(resp.status())),
-            },
+            Ok(resp) => {
+                match resp.status() {
+                    StatusCode::OK => Ok(()),
+                    _ => Err(EurekaError::Request(resp.status())),
+                }
+            }
         }
     }
 
@@ -65,20 +68,21 @@ impl EurekaRestClient {
             path_segment_encode(instance_id)
         );
         debug!("Sending heartbeat request to {}", url);
-        let resp = self
-            .client
+        let resp = self.client
             .put(&url)
             .header("Accept", "application/json")
             .send();
         match resp {
             Err(e) => Err(EurekaError::Network(e)),
-            Ok(resp) => match resp.status() {
-                StatusCode::OK => Ok(()),
-                StatusCode::NOT_FOUND => Err(EurekaError::UnexpectedState(
-                    "Instance does not exist".into(),
-                )),
-                _ => Err(EurekaError::Request(resp.status())),
-            },
+            Ok(resp) => {
+                match resp.status() {
+                    StatusCode::OK => Ok(()),
+                    StatusCode::NOT_FOUND => Err(EurekaError::UnexpectedState(
+                        "Instance does not exist".into(),
+                    )),
+                    _ => Err(EurekaError::Request(resp.status())),
+                }
+            }
         }
     }
 
@@ -86,28 +90,29 @@ impl EurekaRestClient {
     pub fn get_all_instances(&self) -> Result<Vec<Instance>, EurekaError> {
         let url = format!("{}/apps", self.base_url);
         debug!("Sending get all instances request to {}", url);
-        let resp = self
-            .client
+        let resp = self.client
             .get(&url)
             .header("Accept", "application/json")
             .send();
         match resp {
             Err(e) => Err(EurekaError::Network(e)),
-            Ok(mut resp) => match resp.status() {
-                StatusCode::OK => {
-                    // println!("resp {:?}", resp.text().unwrap());
-                    let apps: AllApplications = resp
-                        .json()
-                        .map_err(|e| EurekaError::ParseError(e.to_string()))?;
-                    Ok(apps
-                        .applications
-                        .application
-                        .into_iter()
-                        .flat_map(|a| a.instance.into_iter())
-                        .collect())
+            Ok(mut resp) => {
+                match resp.status() {
+                    StatusCode::OK => {
+                        let apps: AllApplications = resp.json().map_err(|e| {
+                            EurekaError::ParseError(format!("{:?}", e))
+                        })?;
+                        Ok(
+                            apps.applications
+                                .application
+                                .into_iter()
+                                .flat_map(|a| a.instance.into_iter())
+                                .collect(),
+                        )
+                    }
+                    _ => Err(EurekaError::Request(resp.status())),
                 }
-                _ => Err(EurekaError::Request(resp.status())),
-            },
+            }
         }
     }
 
@@ -115,22 +120,23 @@ impl EurekaRestClient {
     pub fn get_instances_by_app(&self, app_id: &str) -> Result<Vec<Instance>, EurekaError> {
         let url = format!("{}/apps/{}", self.base_url, path_segment_encode(app_id));
         debug!("Sending get instances by app request to {}", url);
-        let resp = self
-            .client
+        let resp = self.client
             .get(&url)
             .header("Accept", "application/json")
             .send();
         match resp {
             Err(e) => Err(EurekaError::Network(e)),
-            Ok(mut resp) => match resp.status() {
-                StatusCode::OK => {
-                    let apps: ApplicationWrapper = resp
-                        .json()
-                        .map_err(|e| EurekaError::ParseError(e.to_string()))?;
-                    Ok(apps.application.instance)
+            Ok(mut resp) => {
+                match resp.status() {
+                    StatusCode::OK => {
+                        let apps: ApplicationWrapper = resp.json().map_err(|e| {
+                            EurekaError::ParseError(e.to_string())
+                        })?;
+                        Ok(apps.application.instance)
+                    }
+                    _ => Err(EurekaError::Request(resp.status())),
                 }
-                _ => Err(EurekaError::Request(resp.status())),
-            },
+            }
         }
     }
 
@@ -150,22 +156,23 @@ impl EurekaRestClient {
             "Sending get instance by app and instance request to {}",
             url
         );
-        let resp = self
-            .client
+        let resp = self.client
             .get(&url)
             .header("Accept", "application/json")
             .send();
         match resp {
             Err(e) => Err(EurekaError::Network(e)),
-            Ok(mut resp) => match resp.status() {
-                StatusCode::OK => {
-                    let apps: InstanceWrapper = resp
-                        .json()
-                        .map_err(|e| EurekaError::ParseError(e.to_string()))?;
-                    Ok(apps.instance)
+            Ok(mut resp) => {
+                match resp.status() {
+                    StatusCode::OK => {
+                        let apps: InstanceWrapper = resp.json().map_err(|e| {
+                            EurekaError::ParseError(e.to_string())
+                        })?;
+                        Ok(apps.instance)
+                    }
+                    _ => Err(EurekaError::Request(resp.status())),
                 }
-                _ => Err(EurekaError::Request(resp.status())),
-            },
+            }
         }
     }
 
@@ -184,17 +191,18 @@ impl EurekaRestClient {
             new_status
         );
         debug!("Sending update status request to {}", url);
-        let resp = self
-            .client
+        let resp = self.client
             .put(&url)
             .header("Accept", "application/json")
             .send();
         match resp {
             Err(e) => Err(EurekaError::Network(e)),
-            Ok(resp) => match resp.status() {
-                StatusCode::OK => Ok(()),
-                _ => Err(EurekaError::Request(resp.status())),
-            },
+            Ok(resp) => {
+                match resp.status() {
+                    StatusCode::OK => Ok(()),
+                    _ => Err(EurekaError::Request(resp.status())),
+                }
+            }
         }
     }
 
@@ -215,17 +223,18 @@ impl EurekaRestClient {
             query_encode(value)
         );
         debug!("Sending update metadata request to {}", url);
-        let resp = self
-            .client
+        let resp = self.client
             .put(&url)
             .header("Accept", "application/json")
             .send();
         match resp {
             Err(e) => Err(EurekaError::Network(e)),
-            Ok(resp) => match resp.status() {
-                StatusCode::OK => Ok(()),
-                _ => Err(EurekaError::Request(resp.status())),
-            },
+            Ok(resp) => {
+                match resp.status() {
+                    StatusCode::OK => Ok(()),
+                    _ => Err(EurekaError::Request(resp.status())),
+                }
+            }
         }
     }
 
@@ -240,27 +249,29 @@ impl EurekaRestClient {
             path_segment_encode(vip_address)
         );
         debug!("Sending get instances by vip address request to {}", url);
-        let resp = self
-            .client
+        let resp = self.client
             .get(&url)
             .header("Accept", "application/json")
             .send();
         match resp {
             Err(e) => Err(EurekaError::Network(e)),
-            Ok(mut resp) => match resp.status() {
-                StatusCode::OK => {
-                    let apps: AllApplications = resp
-                        .json()
-                        .map_err(|e| EurekaError::ParseError(e.to_string()))?;
-                    Ok(apps
-                        .applications
-                        .application
-                        .into_iter()
-                        .flat_map(|a| a.instance.into_iter())
-                        .collect())
+            Ok(mut resp) => {
+                match resp.status() {
+                    StatusCode::OK => {
+                        let apps: AllApplications = resp.json().map_err(|e| {
+                            EurekaError::ParseError(e.to_string())
+                        })?;
+                        Ok(
+                            apps.applications
+                                .application
+                                .into_iter()
+                                .flat_map(|a| a.instance.into_iter())
+                                .collect(),
+                        )
+                    }
+                    _ => Err(EurekaError::Request(resp.status())),
                 }
-                _ => Err(EurekaError::Request(resp.status())),
-            },
+            }
         }
     }
 
@@ -275,27 +286,29 @@ impl EurekaRestClient {
             path_segment_encode(svip_address)
         );
         debug!("Sending get instances by svip address request to {}", url);
-        let resp = self
-            .client
+        let resp = self.client
             .get(&url)
             .header("Accept", "application/json")
             .send();
         match resp {
             Err(e) => Err(EurekaError::Network(e)),
-            Ok(mut resp) => match resp.status() {
-                StatusCode::OK => {
-                    let apps: AllApplications = resp
-                        .json()
-                        .map_err(|e| EurekaError::ParseError(e.to_string()))?;
-                    Ok(apps
-                        .applications
-                        .application
-                        .into_iter()
-                        .flat_map(|a| a.instance.into_iter())
-                        .collect())
+            Ok(mut resp) => {
+                match resp.status() {
+                    StatusCode::OK => {
+                        let apps: AllApplications = resp.json().map_err(|e| {
+                            EurekaError::ParseError(e.to_string())
+                        })?;
+                        Ok(
+                            apps.applications
+                                .application
+                                .into_iter()
+                                .flat_map(|a| a.instance.into_iter())
+                                .collect(),
+                        )
+                    }
+                    _ => Err(EurekaError::Request(resp.status())),
                 }
-                _ => Err(EurekaError::Request(resp.status())),
-            },
+            }
         }
     }
 }

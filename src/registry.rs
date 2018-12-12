@@ -29,7 +29,10 @@ impl RegistryClient {
         RegistryClient::update_app_cache_internal(&self.client, &self.app_cache)
     }
 
-    fn update_app_cache_internal(client:&Arc<EurekaRestClient>, app_cache:&Arc<RwLock<HashMap<String, Vec<Instance>>>>) -> Result<(),String> {
+    fn update_app_cache_internal(
+        client: &Arc<EurekaRestClient>,
+        app_cache: &Arc<RwLock<HashMap<String, Vec<Instance>>>>,
+    ) -> Result<(), String> {
         let resp = client.get_all_instances();
         match resp {
             Ok(instances) => {
@@ -38,7 +41,7 @@ impl RegistryClient {
                 return Ok(());
             }
             Err(e) => {
-                return Err(format!("Failed to fetch registry: {}", e));
+                return Err(format!("Failed to fetch registry: {:?}", e));
             }
         };
     }
@@ -49,11 +52,10 @@ impl RegistryClient {
         let client = Arc::clone(&self.client);
         let app_cache = Arc::clone(&self.app_cache);
         self.update_app_cache();
-        thread::spawn(move || {
-            while is_running.load(Ordering::Relaxed) {
-                RegistryClient::update_app_cache_internal(&client, &app_cache).map_err(|e| println!("{}",e));
-                thread::sleep(Duration::from_secs(30));
-            }
+        thread::spawn(move || while is_running.load(Ordering::Relaxed) {
+            RegistryClient::update_app_cache_internal(&client, &app_cache)
+                .map_err(|e| println!("{}", e));
+            thread::sleep(Duration::from_secs(30));
         });
     }
 
