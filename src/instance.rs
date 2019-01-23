@@ -53,7 +53,8 @@ impl InstanceClient {
                         let _ = client.register(&config.app, &*config);
                     }
                     Err(e) => {
-                        error!("Failed to send heartbeat: {}", e);
+                        error!("Failed to send heartbeat: {}, reregistering", e);
+                        let _ = client.register(&config.app, &*config);
                     }
                     Ok(_) => {
                         debug!("Sent heartbeat successfully");
