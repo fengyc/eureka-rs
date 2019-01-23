@@ -135,6 +135,23 @@ impl EurekaClient {
         }
     }
 
+    pub fn find_app_address(&self, app_id:&str) ->Option<String> {
+        let instance = self.registry.get_instance_by_app_name(app_id);
+        if let Some(instance) = instance {
+            let ssl = self.config.eureka.ssl;
+            let host = instance.ip_addr;
+            let port = if ssl && instance.secure_port.value().is_some() {
+                instance.secure_port.value().unwrap()
+            } else {
+                instance.port.and_then(|port| port.value()).unwrap_or(8080)
+            };
+            println!("app {} addr {}:{}", app_id, host, port);
+            Some(format!("{}:{}", host, port))
+        } else {
+            None
+        }
+    }
+
     /// Sends a request to another app in this eureka cluster, and returns the response.
     ///
     /// This method assumes that your services all communicate using JSON.
