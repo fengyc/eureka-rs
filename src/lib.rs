@@ -115,12 +115,15 @@ impl EurekaClient {
             let service_path = &config.eureka.service_path;
             format!("{}://{}:{}{}", protocol, host, port, service_path)
         };
+        let mut instance = config.instance.clone();
+        instance.vip_address = instance.app.clone();
+        instance.secure_vip_address = instance.vip_address.clone();
         EurekaClient {
             base_url: base_url.clone(),
             client: ReqwestClient::new(),
             registry: RegistryClient::new(base_url.clone()),
             instance: if config.eureka.register_with_eureka {
-                Some(InstanceClient::new(base_url, config.instance.clone()))
+                Some(InstanceClient::new(base_url, instance))
             } else {
                 None
             },
