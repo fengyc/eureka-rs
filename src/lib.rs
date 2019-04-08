@@ -11,6 +11,7 @@ extern crate serde;
 #[macro_use]
 extern crate serde_derive;
 extern crate serde_json;
+extern crate rand;
 
 use self::instance::InstanceClient;
 pub use self::instance::{Instance, PortData, StatusType};
