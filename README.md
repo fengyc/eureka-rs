@@ -6,6 +6,7 @@ This project is currently in an **alpha state** as indicated by the version numb
 
 - Registering a service with Eureka
 - Sending keep-alive heartbeats to Eureka
+- Re-registering after Eureka restarting
 
 ### What is implemented but untested
 
