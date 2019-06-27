@@ -1,10 +1,10 @@
+use itertools::Itertools;
+use rand::random;
 use std::collections::HashMap;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, RwLock};
 use std::thread;
 use std::time::Duration;
-use rand::random;
-use itertools::Itertools;
 
 use rest::structures::{Instance, StatusType};
 use rest::EurekaRestClient;
@@ -52,10 +52,12 @@ impl RegistryClient {
         let client = Arc::clone(&self.client);
         let app_cache = Arc::clone(&self.app_cache);
         self.update_app_cache();
-        thread::spawn(move || while is_running.load(Ordering::Relaxed) {
-            RegistryClient::update_app_cache_internal(&client, &app_cache)
-                .map_err(|e| println!("{}", e));
-            thread::sleep(Duration::from_secs(30));
+        thread::spawn(move || {
+            while is_running.load(Ordering::Relaxed) {
+                RegistryClient::update_app_cache_internal(&client, &app_cache)
+                    .map_err(|e| println!("{}", e));
+                thread::sleep(Duration::from_secs(30));
+            }
         });
     }
 
@@ -67,13 +69,13 @@ impl RegistryClient {
             .get(app)
             .and_then(|instances| {
                 //random select one UP node
-                let mut valid_ids:Vec<usize> = Vec::new();
+                let mut valid_ids: Vec<usize> = Vec::new();
                 for i in 0..instances.len() {
                     if instances[i].status == StatusType::Up {
                         valid_ids.push(i);
                     }
                 }
-                if valid_ids.len() >0 {
+                if valid_ids.len() > 0 {
                     let index = valid_ids[random::<usize>() % valid_ids.len()];
                     instances.get(index)
                 } else {

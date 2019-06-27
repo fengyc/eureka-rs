@@ -10,8 +10,8 @@ extern crate reqwest;
 extern crate serde;
 #[macro_use]
 extern crate serde_derive;
-extern crate serde_json;
 extern crate rand;
+extern crate serde_json;
 
 use self::instance::InstanceClient;
 pub use self::instance::{Instance, PortData, StatusType};
@@ -19,8 +19,8 @@ use self::registry::RegistryClient;
 use reqwest::header::HeaderMap;
 use reqwest::Client as ReqwestClient;
 pub use reqwest::{Error as ReqwestError, Method, Response, StatusCode};
-pub use serde::Serialize;
 pub use serde::de::DeserializeOwned;
+pub use serde::Serialize;
 
 mod aws;
 mod instance;
@@ -139,7 +139,7 @@ impl EurekaClient {
         }
     }
 
-    pub fn find_app_address(&self, app_id:&str) ->Option<String> {
+    pub fn find_app_address(&self, app_id: &str) -> Option<String> {
         let instance = self.registry.get_instance_by_app_name(app_id);
         if let Some(instance) = instance {
             let ssl = self.config.eureka.ssl;
@@ -201,9 +201,10 @@ impl EurekaClient {
                 .send()
                 .map_err(EurekaError::Network)
         } else {
-            Err(EurekaError::UnexpectedState(
-                format!("Could not find app {}", app),
-            ))
+            Err(EurekaError::UnexpectedState(format!(
+                "Could not find app {}",
+                app
+            )))
         }
     }
     pub fn call<V: Serialize, R: DeserializeOwned>(

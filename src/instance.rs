@@ -44,17 +44,31 @@ impl InstanceClient {
         let config = Arc::clone(&self.config);
         let instance_id = self.get_instance_id();
         thread::spawn(move || {
+            let do_regist = || {
+                match client.register(&config.app, &*config) {
+                    Ok(_) => {
+                        info!("update status to UP");
+                        client
+                            .update_status(&config.app, &instance_id, StatusType::Up)
+                            .map(|_| info!("update status ok!"))
+                            .map_err(|err| error!("Failed to set app to UP: {}", err));
+                    }
+                    Err(e) => {
+                        error!("Failed to register app: {}", e);
+                    }
+                };
+            };
             thread::sleep(Duration::from_secs(30));
             while is_running.load(Ordering::Relaxed) {
                 let resp = client.send_heartbeat(&config.app, &instance_id);
                 match resp {
                     Err(EurekaError::UnexpectedState(_)) => {
                         warn!("App not registered with eureka, reregistering");
-                        let _ = client.register(&config.app, &*config);
+                        do_regist();
                     }
                     Err(e) => {
                         error!("Failed to send heartbeat: {}, reregistering", e);
-                        let _ = client.register(&config.app, &*config);
+                        do_regist();
                     }
                     Ok(_) => {
                         debug!("Sent heartbeat successfully");
@@ -64,11 +78,9 @@ impl InstanceClient {
             }
         });
 
-        while let Err(e) = self.client.update_status(
-            &self.config.app,
-            &self.get_instance_id(),
-            StatusType::Up,
-        )
+        while let Err(e) =
+            self.client
+                .update_status(&self.config.app, &self.get_instance_id(), StatusType::Up)
         {
             error!("Failed to set app to UP: {}", e);
             thread::sleep(Duration::from_secs(15));
@@ -79,9 +91,8 @@ impl InstanceClient {
 impl Drop for InstanceClient {
     fn drop(&mut self) {
         self.is_running.store(false, Ordering::Relaxed);
-        let _ = self.client.deregister(
-            &self.config.app,
-            &self.get_instance_id(),
-        );
+        let _ = self
+            .client
+            .deregister(&self.config.app, &self.get_instance_id());
     }
 }
