@@ -38,12 +38,10 @@ impl RegistryClient {
             Ok(instances) => {
                 // println!("got instances {:?}", instances);
                 *app_cache.write().unwrap() = group_instances_by_app(instances);
-                return Ok(());
+                Ok(())
             }
-            Err(e) => {
-                return Err(format!("Failed to fetch registry: {:?}", e));
-            }
-        };
+            Err(e) => Err(format!("Failed to fetch registry: {:?}", e)),
+        }
     }
     pub fn start(&self) {
         self.is_running.store(true, Ordering::Relaxed);
@@ -70,12 +68,12 @@ impl RegistryClient {
             .and_then(|instances| {
                 //random select one UP node
                 let mut valid_ids: Vec<usize> = Vec::new();
-                for i in 0..instances.len() {
-                    if instances[i].status == StatusType::Up {
+                for (i, item) in instances.iter().enumerate() {
+                    if item.status == StatusType::Up {
                         valid_ids.push(i);
                     }
                 }
-                if valid_ids.len() > 0 {
+                if !valid_ids.is_empty() {
                     let index = valid_ids[random::<usize>() % valid_ids.len()];
                     instances.get(index)
                 } else {
