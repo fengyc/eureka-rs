@@ -27,6 +27,7 @@ mod instance;
 mod registry;
 mod resolver;
 mod rest;
+mod xml;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]

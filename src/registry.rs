@@ -6,8 +6,8 @@ use std::sync::{Arc, RwLock};
 use std::thread;
 use std::time::Duration;
 
-use rest::structures::{Instance, StatusType};
-use rest::EurekaRestClient;
+use crate::rest::structures::{Instance, StatusType};
+use crate::rest::EurekaRestClient;
 
 #[derive(Debug)]
 pub struct RegistryClient {

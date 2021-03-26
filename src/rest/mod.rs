@@ -1,8 +1,8 @@
 pub mod structures;
 
 use self::structures::*;
+use crate::{path_segment_encode, query_encode, EurekaError};
 use reqwest::{Client, StatusCode};
-use {path_segment_encode, query_encode, EurekaError};
 
 #[derive(Debug)]
 pub struct EurekaRestClient {

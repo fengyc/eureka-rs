@@ -1,10 +1,10 @@
-pub use rest::structures::{Instance, PortData, StatusType};
-use rest::EurekaRestClient;
+pub use crate::rest::structures::{Instance, PortData, StatusType};
+use crate::rest::EurekaRestClient;
+use crate::EurekaError;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 use std::thread;
 use std::time::Duration;
-use EurekaError;
 
 #[derive(Debug)]
 pub struct InstanceClient {

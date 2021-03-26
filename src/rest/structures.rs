@@ -1,4 +1,3 @@
-use serde_json;
 use std::collections::HashMap;
 use std::env;
 use std::fmt::{Display, Error as FmtError, Formatter};
@@ -34,14 +33,11 @@ impl Default for Instance {
     fn default() -> Self {
         Instance {
             host_name: "localhost".to_string(),
-            instance_id: Some(format!(
-                "{}:127.0.0.1",
-                env::var("CARGO_PKG_NAME").unwrap_or_default()
-            )),
-            app: env::var("CARGO_PKG_NAME").unwrap_or_default(),
+            instance_id: None,
+            app: env!("CARGO_PKG_NAME").to_string(),
             ip_addr: "127.0.0.1".to_string(),
-            vip_address: env::var("CARGO_PKG_NAME").unwrap_or_default(),
-            secure_vip_address: env::var("CARGO_PKG_NAME").unwrap_or_default(),
+            vip_address: env!("CARGO_PKG_NAME").to_string(),
+            secure_vip_address: env!("CARGO_PKG_NAME").to_string(),
             status: StatusType::Starting,
             port: None,
             secure_port: PortData::new(443, false),
@@ -87,6 +83,7 @@ pub struct AllApplications {
 
 #[derive(Debug, Clone, Deserialize)]
 pub struct Applications {
+    #[serde(default)]
     pub application: Vec<Application>,
 }
 
