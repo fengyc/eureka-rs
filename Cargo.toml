@@ -1,5 +1,5 @@
 [package]
-authors = ["Josh Holmer <jholmer.in@gmail.com>"]
+authors = ["Josh Holmer <jholmer.in@gmail.com>", "FENG Yingcai <fengyc.work@gmail.com>"]
 name = "eureka-client"
 description = "Handles HTTP requests to and registering a service with Eureka"
 repository = "https://github.com/shssoichiro/eureka-rs"
