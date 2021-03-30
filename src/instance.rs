@@ -1,4 +1,4 @@
-pub use crate::rest::structures::{Instance, PortData, StatusType};
+pub use crate::rest::structures::{Instance, PortData, SecurePort, StatusType};
 use crate::rest::EurekaRestClient;
 use crate::EurekaError;
 use std::sync::atomic::{AtomicBool, Ordering};

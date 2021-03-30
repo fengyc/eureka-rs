@@ -6,28 +6,28 @@ extern crate log;
 extern crate percent_encoding;
 #[macro_use]
 extern crate quick_error;
+extern crate rand;
 extern crate reqwest;
 extern crate serde;
 #[macro_use]
 extern crate serde_derive;
-extern crate rand;
 extern crate serde_json;
 
-use self::instance::InstanceClient;
-pub use self::instance::{Instance, PortData, StatusType};
-use self::registry::RegistryClient;
 use reqwest::header::HeaderMap;
 use reqwest::Client as ReqwestClient;
 pub use reqwest::{Error as ReqwestError, Method, Response, StatusCode};
 pub use serde::de::DeserializeOwned;
 pub use serde::Serialize;
 
+use self::instance::InstanceClient;
+pub use self::instance::{Instance, PortData, SecurePort, StatusType};
+use self::registry::RegistryClient;
+
 mod aws;
 mod instance;
 mod registry;
 mod resolver;
 mod rest;
-mod xml;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -75,7 +75,7 @@ impl Default for EurekaConfig {
     }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+#[derive(Debug, Clone, Default)]
 pub struct BaseConfig {
     pub eureka: EurekaConfig,
     pub instance: Instance,
@@ -145,10 +145,10 @@ impl EurekaClient {
         if let Some(instance) = instance {
             let ssl = self.config.eureka.ssl;
             let host = instance.ip_addr;
-            let port = if ssl && instance.secure_port.value().is_some() {
-                instance.secure_port.value().unwrap()
+            let port = if ssl {
+                instance.secure_port.value
             } else {
-                instance.port.and_then(|port| port.value()).unwrap_or(8080)
+                instance.port.value
             };
             println!("app {} addr {}:{}", app_id, host, port);
             Some(format!("{}:{}", host, port))
@@ -162,7 +162,6 @@ impl EurekaClient {
     /// This method assumes that your services all communicate using JSON.
     /// Future methods may be added to allow other request body types.
     ///
-    /// `Accept: "application/json"` is preset on all requests by this method.
     /// You can add additional headers such as `Authorization` using the `headers` parameter.
     pub fn make_request<V: Serialize>(
         &self,
@@ -172,20 +171,19 @@ impl EurekaClient {
         body: &V,
         mut headers: HeaderMap,
     ) -> Result<Response, EurekaError> {
-        println!("finding app {}", app);
+        log::debug!("finding app {}", app);
         let instance = self.registry.get_instance_by_app_name(app);
         if let Some(instance) = instance {
             //println!("app {} instance {:?}", app, instance);
             let ssl = self.config.eureka.ssl;
             let protocol = if ssl { "https" } else { "http" };
             let host = instance.ip_addr;
-            let port = if ssl && instance.secure_port.value().is_some() {
-                instance.secure_port.value().unwrap()
+            let port = if ssl {
+                instance.secure_port.value
             } else {
-                instance.port.and_then(|port| port.value()).unwrap_or(8080)
+                instance.port.value
             };
-            println!("app {} addr {}:{}", app, host, port);
-            headers.insert("Accept", "application/json".parse().unwrap());
+            log::debug!("app {} addr {}:{}", app, host, port);
             self.client
                 .request(
                     method,
@@ -208,6 +206,7 @@ impl EurekaClient {
             )))
         }
     }
+
     pub fn call<V: Serialize, R: DeserializeOwned>(
         &self,
         app: &str,
