@@ -2,6 +2,12 @@
 
 This project is currently in an **alpha state** as indicated by the version number.
 
+## TODO
+
+- [ ] async support
+- [ ] auth support
+- [ ] examples
+
 ### What Works
 
 - Registering a service with Eureka
