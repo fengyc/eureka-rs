@@ -65,3 +65,7 @@ rocket::ignite()
 
 This client registers with eureka by default. You can disable registration by setting `config.eureka.register_with_eureka = false`
 if you just want to use this client to make requests.
+
+## License
+
+MIT
