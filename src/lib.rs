@@ -13,14 +13,14 @@ extern crate serde;
 extern crate serde_derive;
 extern crate serde_json;
 
-use reqwest::header::HeaderMap;
-use reqwest::Client as ReqwestClient;
 pub use reqwest::{Error as ReqwestError, Method, Response, StatusCode};
+use reqwest::Client as ReqwestClient;
+use reqwest::header::HeaderMap;
 pub use serde::de::DeserializeOwned;
 pub use serde::Serialize;
 
-use self::instance::InstanceClient;
 pub use self::instance::{Instance, PortData, SecurePort, StatusType};
+use self::instance::InstanceClient;
 use self::registry::RegistryClient;
 
 mod aws;
@@ -29,18 +29,46 @@ mod registry;
 mod resolver;
 mod rest;
 
+/// Eureka client config
+pub struct ClientConfig {
+    pub eureka_connection_idle_timeout_seconds: usize,
+    pub eureka_server_connect_timeout_seconds: usize,
+    pub eureka_server_d_n_s_name: String,
+    pub eureka_server_port: u16,
+    pub eureka_server_read_timeout_seconds: usize,
+}
+
+impl Default for ClientConfig {
+    fn default() -> Self {
+        todo!()
+    }
+}
+
+pub struct EurekaInstanceConfig {}
+
+/// Eureka configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct EurekaConfig {
+    /// Server host, default localhost
     pub host: String,
+    /// Server port, default 8761
     pub port: u16,
+    /// Heartbeat interval in milli-seconds, default 30,000
     pub heartbeat_interval: usize,
+    /// Registry fetch interval in milli-seconds, default 30,000
     pub registry_fetch_interval: usize,
+    /// Request max retries, default 3
     pub max_retries: usize,
+    /// Eureka request retry delay in milli-seconds, default 500
     pub request_retry_delay: usize,
+    /// Fetch registry or not
     pub fetch_registry: bool,
+    /// Filter instance
     pub filter_up_instances: bool,
+    /// Service path
     pub service_path: String,
+    /// Use ssl
     pub ssl: bool,
     pub use_dns: bool,
     pub prefer_same_zone: bool,

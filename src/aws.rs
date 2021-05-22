@@ -1,3 +1,5 @@
+//! AWS support
+
 use std::collections::HashMap;
 
 use reqwest::{Client, Response};
@@ -10,6 +12,8 @@ pub struct AwsMetadata {
 }
 
 impl AwsMetadata {
+    pub const METADATA_ENDPOINT: &'static str = "169.254.169.254";
+
     pub fn new(config: &HashMap<String, Value>) -> Self {
         AwsMetadata {
             client: Client::new(),
